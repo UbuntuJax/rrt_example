@@ -2,6 +2,7 @@ import pygame
 from rrtbasepy import RRTGraph, RRTMap
 
 def main():
+    iteration=0
     dimensions = (600,1000)
     start = (50,50)
     goal = (510, 510)
@@ -16,19 +17,28 @@ def main():
 
     map.draw_map(obstacles)
 
-    while(True):
-        x,y = graph.sample_environment()
-        n=graph.number_of_nodes()
-        graph.add_node(n,x,y)
-        graph.add_edge(n-1,n)
-        x1,y1=graph.x[n],graph.y[n]
-        x2,y2=graph.x[n-1],graph.y[n-1]
-        if(graph.is_free()):
-            pygame.draw.circle(map.map, map.red, (graph.x[n], graph.y[n]), map.node_rad, map.node_thickness)
-            if not graph.cross_obstacle(x1,x2,y1,y2):
-                pygame.draw.line(map.map, map.blue,(x1,y1),(x2,y2),map.edge_thickness)
 
-        pygame.display.update()
+    while (iteration<10000):
+        if iteration % 10 ==0:
+            x,y,parent=graph.bias(goal)
+            pygame.draw.circle(map.map, map.grey,(x[-1],y[-1]),map.node_rad+2,0)
+            pygame.draw.line(map.map,map.blue,(x[-1],y[-1]),(x[parent[-1]],y[parent[-1]]),\
+                map.edge_thickness)
+
+        else:
+            x,y,parent=graph.expand()
+            pygame.draw.circle(map.map, map.grey, (x[-1], y[-1]), map.node_rad+2,0)
+            pygame.draw.line(map.map,map.blue,(x[-1],y[-1]),(x[parent[-1]],y[parent[-1]]),\
+                map.edge_thickness)
+
+        if iteration%5==0:
+            pygame.display.update()
+        iteration+=1
+    
+    
+    pygame.display.update()
+    pygame.event.clear()
+    pygame.event.wait(0)
 
 
 
