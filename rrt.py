@@ -14,11 +14,10 @@ def main():
     map=RRTMap(start,goal,dimensions,obsdim,obsnum)
 
     obstacles=graph.make_obs()
-
     map.draw_map(obstacles)
 
 
-    while (iteration<1000):
+    while (not graph.path_to_goal()):
         if iteration % 5 ==0:
             print("1")
             x,y,parent=graph.bias(goal)
@@ -37,7 +36,7 @@ def main():
             pygame.display.update()
         iteration+=1
     
-    
+    map.draw_path(graph.get_path_coords())
     pygame.display.update()
     pygame.event.clear()
     pygame.event.wait(0)
