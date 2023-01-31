@@ -126,7 +126,8 @@ class RRTGraph:
         dmin=self.distance(0,n)
         n_near=0
         for i in range(0,n):
-            if self.distance(i,n):
+            if self.distance(i,n)<dmin:
+                dmin=self.distance(i,n)
                 n_near=i
         return n_near
 
