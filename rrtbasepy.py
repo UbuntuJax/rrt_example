@@ -12,11 +12,18 @@ class RRTMap:
         self.map_dimensions=map_dimensions
         self.maph,self.mapw=self.map_dimensions
 
+        # colors
+        self.grey = (70,70,70)
+        self.blue = (0,0,255)
+        self.green = (0,255,0)
+        self.red = (255,0,0)
+        self.white = (255,255,255)
+
         # window settings
         self.map_window_name='RRT path planning'
         pygame.display.set_caption(self.map_window_name)
         self.map = pygame.display.set_mode((self.mapw, self.maph))
-        self.map.fill((255,255,255))
+        self.map.fill(self.white)
         self.node_rad=2
         self.node_thickness=0
         self.edge_thickness=1
@@ -24,13 +31,6 @@ class RRTMap:
         self.obstacles=[]
         self.obsdim=obsdim
         self.obs_number=obsnum
-
-        # colors
-        self.grey = (70,70,70)
-        self.blue = (0,0,255)
-        self.green = (0,255,0)
-        self.red = (255,0,0)
-        self.white = (255,255,255)
 
     def draw_map(self, obstacles):
         pygame.draw.circle(self.map, self.green, self.start, self.node_rad+5,0)
@@ -67,35 +67,43 @@ class RRTGraph:
         # the obstacles
         self.obstacles=[]
         self.obs_dim=obsdim
-        self.obsNum=obsnum
+        self.obs_num=obsnum
 
         # path
         self.goal_state=None
         self.path=[]
 
-    def make_random_rect(self):
-        upper_corner_x=int(random.uniform(0,self.mapw-self.obs_dim))
-        upper_corner_y=int(random.uniform(0,self.maph-self.obs_dim))
-
-        return (upper_corner_x,upper_corner_y)
-
     def make_obs(self):
-        """ Makes random rectangle obstacles that can intersect with each-other"""
+        """Make a straight line of obstacles, then create extrusions"""
         obs=[]
 
-        for i in range(0, self.obsNum):
+        # straight line of obstacles
+        for i in range(0, self.obs_num):
+            print(f'i:{i}')
             rectangle=None
-            start_goal_col = True
-            while start_goal_col:
-                upper = self.make_random_rect()
-                rectangle=pygame.Rect(upper,(self.obs_dim, self.obs_dim))
-                if rectangle.collidepoint(self.start) or rectangle.collidepoint(self.goal):
-                    start_goal_col=True
-                else:
-                    start_goal_col=False
+            upper=(i*25,200)
+            rectangle=pygame.Rect(upper,(self.obs_dim, self.obs_dim))
+            if rectangle.collidepoint(self.start) or rectangle.collidepoint(self.goal):
+                i+=1
+                continue
             obs.append(rectangle)
+
+        # extrusions
+        for i in range(0, self.obs_num):
+            y_pos = random.uniform(200,100)
+            y_len = 200-y_pos
+            upper = (i*50, y_pos)
+            rectangle=pygame.Rect(upper,(self.obs_dim, y_len))
+            if rectangle.collidepoint(self.start) or rectangle.collidepoint(self.goal):
+                i+=1
+                continue
+            obs.append(rectangle)
+
+
+        # returning list
         self.obstacles=obs.copy()
         return obs
+
 
     def add_node(self,n,x,y):
         self.x.insert(n,x)
@@ -133,7 +141,16 @@ class RRTGraph:
             if self.distance(i,n)<dmin:
                 dmin=self.distance(i,n)
                 n_near=i
+        print(f'n_near: {n_near}')
+        print(f'distance: {self.distance(n_near, n)}')
         return n_near
+
+    def node_generation(self, n_goal):
+        n = self.number_of_nodes()
+        x = 50 # placeholder x_pos for generating nodes
+
+        # sample the closest obstacle in the y
+
 
     def is_free(self):
         n=self.number_of_nodes()-1
