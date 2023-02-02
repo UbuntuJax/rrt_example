@@ -5,9 +5,9 @@ def main():
     iteration=0
     dimensions = (600,1000)
     start = (50,50)
-    goal = (800, 510)
+    goal = (510, 510)
     obsdim=30
-    obsnum=50
+    obsnum=100
 
     pygame.init()
     graph=RRTGraph(start,goal,dimensions,obsdim,obsnum)
@@ -18,15 +18,13 @@ def main():
 
 
     while (not graph.path_to_goal()):
-        if iteration % 5 ==0:
-            print("1")
+        if iteration % 10 ==0:
             x,y,parent=graph.bias(goal)
             pygame.draw.circle(map.map, map.grey,(x[-1],y[-1]),map.node_rad+2,0)
             pygame.draw.line(map.map,map.blue,(x[-1],y[-1]),(x[parent[-1]],y[parent[-1]]),\
                 map.edge_thickness)
 
         else:
-            print("0")
             x,y,parent=graph.expand()
             pygame.draw.circle(map.map, map.grey, (x[-1], y[-1]), map.node_rad+2,0)
             pygame.draw.line(map.map,map.blue,(x[-1],y[-1]),(x[parent[-1]],y[parent[-1]]),\
@@ -44,4 +42,8 @@ def main():
 
 
 if __name__ == '__main__':
+    # try:
+    #     main()
+    # except IndexError:
+    #     print
     main()

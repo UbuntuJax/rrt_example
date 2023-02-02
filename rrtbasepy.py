@@ -6,6 +6,7 @@ import pygame
 
 class RRTMap:
     def __init__(self, start, goal, map_dimensions, obsdim, obsnum):
+        """Initialise vars"""
         self.start=start
         self.goal=goal
         self.map_dimensions=map_dimensions
@@ -48,6 +49,7 @@ class RRTMap:
 
 class RRTGraph:
     def __init__(self, start, goal, map_dimensions, obsdim, obsnum):
+        """Initialise vars"""
         (x,y)=start
         self.start=start
         self.goal=goal
@@ -78,6 +80,7 @@ class RRTGraph:
         return (upper_corner_x,upper_corner_y)
 
     def make_obs(self):
+        """ Makes random rectangle obstacles that can intersect with each-other"""
         obs=[]
 
         for i in range(0, self.obsNum):
