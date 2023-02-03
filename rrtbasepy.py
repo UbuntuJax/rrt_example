@@ -174,9 +174,11 @@ class RRTGraph:
         print(f'n1: {n}')
         y = 50 # placeholder y_pos for generating nodes
         circle_locations=[]
+        num_nodes=160
+        space=1000/num_nodes
         
-        for i in range(0,20):
-            x = i * 50 + self.obs_dim/2
+        for i in range(0,num_nodes):
+            x = i * space + self.obs_dim/2
             # x = 0
             self.add_node(n, x, y)
             n = self.number_of_nodes()
