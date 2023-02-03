@@ -16,26 +16,32 @@ def main():
     obstacles=graph.make_obs()
     map.draw_map(obstacles)
 
+    circle_locations=graph.node_generation()
+    for x,y in circle_locations:
+        pygame.draw.circle(map.map, map.grey,(x,y),map.node_rad+2,0)
+    # draw circles at places identified by node_generation
 
-    while (not graph.path_to_goal()):
-        if iteration % 10 == 0:
-            x,y,parent=graph.bias(goal)
-            pygame.draw.circle(map.map, map.grey,(x[-1],y[-1]),map.node_rad+2,0)
-            pygame.draw.line(map.map,map.blue,(x[-1],y[-1]),(x[parent[-1]],y[parent[-1]]),\
-                map.edge_thickness)
+    # while (not graph.path_to_goal()):
+    #     if iteration % 10 == 0:
+    #         x,y,parent=graph.bias(goal)
+    #         pygame.draw.circle(map.map, map.grey,(x[-1],y[-1]),map.node_rad+2,0)
+    #         pygame.draw.line(map.map,map.blue,(x[-1],y[-1]),(x[parent[-1]],y[parent[-1]]),\
+    #             map.edge_thickness)
 
-        else:
-            x,y,parent=graph.expand()
-            pygame.draw.circle(map.map, map.grey, (x[-1], y[-1]), map.node_rad+2,0)
-            pygame.draw.line(map.map,map.blue,(x[-1],y[-1]),(x[parent[-1]],y[parent[-1]]),\
-                map.edge_thickness)
+    #     else:
+    #         x,y,parent=graph.expand()
+    #         pygame.draw.circle(map.map, map.grey, (x[-1], y[-1]), map.node_rad+2,0)
+    #         pygame.draw.line(map.map,map.blue,(x[-1],y[-1]),(x[parent[-1]],y[parent[-1]]),\
+    #             map.edge_thickness)
 
-        if iteration%5==0:
-            pygame.display.update()
-        iteration+=1
+    #     if iteration%5==0:
+    #         pygame.display.update()
+    #     iteration+=1
+
     
     map.draw_path(graph.get_path_coords())
-    print(f'x: {graph.x}')
+    #print(f'x: {graph.x}')
+    #print(f'obstacles: {graph.obs_pos}')
     pygame.display.update()
     pygame.event.clear()
     pygame.event.wait(0)

@@ -27,8 +27,6 @@ class RRTMap:
         self.node_rad=2
         self.node_thickness=0
         self.edge_thickness=1
-
-        self.obstacles=[]
         self.obsdim=obsdim
         self.obs_number=obsnum
 
@@ -66,6 +64,7 @@ class RRTGraph:
 
         # the obstacles
         self.obstacles=[]
+        self.obs_pos=[] # list of tuples: [(xmin, xmax, ymin, ymax), (...), ...]
         self.obs_dim=obsdim
         self.obs_num=obsnum
 
@@ -76,10 +75,10 @@ class RRTGraph:
     def make_obs(self):
         """Make a straight line of obstacles, then create extrusions"""
         obs=[]
+        obs_pos=[]
 
         # straight line of obstacles
         for i in range(0, self.obs_num):
-            print(f'i:{i}')
             rectangle=None
             upper=(i*25,200)
             rectangle=pygame.Rect(upper,(self.obs_dim, self.obs_dim))
@@ -87,6 +86,8 @@ class RRTGraph:
                 i+=1
                 continue
             obs.append(rectangle)
+            pos=(upper[0], upper[0]+self.obs_dim, upper[1], upper[1]+self.obs_dim)
+            obs_pos.append(pos)
 
         # extrusions
         for i in range(0, self.obs_num):
@@ -98,10 +99,13 @@ class RRTGraph:
                 i+=1
                 continue
             obs.append(rectangle)
+            pos=(upper[0], upper[0]+self.obs_dim, upper[1], upper[1]+self.obs_dim)
+            obs_pos.append(pos)
 
 
         # returning list
         self.obstacles=obs.copy()
+        self.obs_pos=obs_pos.copy()
         return obs
 
 
@@ -141,15 +145,51 @@ class RRTGraph:
             if self.distance(i,n)<dmin:
                 dmin=self.distance(i,n)
                 n_near=i
-        print(f'n_near: {n_near}')
-        print(f'distance: {self.distance(n_near, n)}')
         return n_near
 
-    def node_generation(self, n_goal):
-        n = self.number_of_nodes()
-        x = 50 # placeholder x_pos for generating nodes
+    def nearest_y(self, n):
+        # needs testing
+        """Check x_pos of obs is valid, then check y dist from node to obstacle"""
+        # get obstacle positions
+        node_x=self.x[n]
+        node_y=self.y[n]
+        valid_nodes=[]
+        y_pos=1000
 
-        # sample the closest obstacle in the y
+        # find valid x nodes
+        for i in self.obs_pos:
+            if node_x <= i[1] and node_x >= i[0]:
+                valid_nodes.append(i)
+
+        # find closest y obstacle
+        for i in valid_nodes:
+            if i[3] < y_pos:
+                y_pos = i[3]
+
+        return y_pos # returns the pixel value
+
+
+    def node_generation(self):
+        n = self.number_of_nodes()
+        print(f'n1: {n}')
+        y = 50 # placeholder y_pos for generating nodes
+        circle_locations=[]
+        
+        for i in range(0,20):
+            x = i * 50 + self.obs_dim/2
+            # x = 0
+            self.add_node(n, x, y)
+            n = self.number_of_nodes()
+            print(f'n2: {n}')
+    
+            # sample the closest obstacle in the y
+            y_close = self.nearest_y(n-1)
+            print(f'node: {x,y,n}')
+            print(f'y_close: {y_close}')
+
+            # save circle locations for main() to draw
+            circle_locations.append((x, y_close-50))
+        return circle_locations
 
 
     def is_free(self):
@@ -235,9 +275,9 @@ class RRTGraph:
         x,y=self.sample_environment()
         self.add_node(n,x,y)
         if self.is_free():
-            x_nearest=self.nearest(n)
-            self.step(x_nearest,n)
-            self.connect(x_nearest,n)
+            n_near=self.nearest(n)
+            self.step(n_near,n)
+            self.connect(n_near,n)
         return self.x, self.y, self.parent
 
     def cost(self):
