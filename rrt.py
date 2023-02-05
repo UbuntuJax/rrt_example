@@ -19,14 +19,14 @@ def main():
 
     while (not graph.path_to_goal()):
         if iteration % 5 ==0:
-            print("1")
+            print("bias")
             x,y,parent=graph.bias(goal)
             pygame.draw.circle(map.map, map.grey,(x[-1],y[-1]),map.node_rad+2,0)
             pygame.draw.line(map.map,map.blue,(x[-1],y[-1]),(x[parent[-1]],y[parent[-1]]),\
                 map.edge_thickness)
 
         else:
-            print("0")
+            print("expand")
             x,y,parent=graph.expand()
             pygame.draw.circle(map.map, map.grey, (x[-1], y[-1]), map.node_rad+2,0)
             pygame.draw.line(map.map,map.blue,(x[-1],y[-1]),(x[parent[-1]],y[parent[-1]]),\
