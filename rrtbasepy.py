@@ -36,8 +36,9 @@ class RRTMap:
         pygame.draw.circle(self.map, self.red, self.goal, self.node_rad+20,1)
         self.draw_obs(obstacles)
 
-    def draw_path(self):
-        pass
+    def draw_path(self, path):
+        for node in path:
+            pygame.draw.circle(self.map, self.red, node, self.node_rad+3,0)
 
     def draw_obs(self, obstacles):
         obstacles_list = obstacles.copy()
@@ -50,7 +51,7 @@ class RRTGraph:
         (x,y)=start
         self.start=start
         self.goal=goal
-        self.goalFlag=False
+        self.goal_flag=False
         self.maph,self.mapw = map_dimensions
         self.x=[]
         self.y=[]
@@ -122,8 +123,14 @@ class RRTGraph:
         y=int(random.uniform(0,self.maph))
         return x,y
 
-    def nearest(self):
-        pass
+    def nearest(self, n):
+        dmin=self.distance(0,n)
+        n_near=0
+        for i in range(0,n):
+            if self.distance(i,n)<dmin:
+                dmin=self.distance(i,n)
+                n_near=i
+        return n_near
 
     def is_free(self):
         n=self.number_of_nodes()-1
@@ -158,20 +165,60 @@ class RRTGraph:
             self.add_edge(n1,n2)
             return True
 
-    def step(self):
-        pass
+    def step(self, n_near, n_rand, dmax=35):
+        d=self.distance(n_near, n_rand)
+        if d>dmax:
+            u=dmax/d
+            (x_near,y_near)=(self.x[n_near],self.y[n_near])
+            (x_rand,y_rand)=(self.x[n_rand], self.y[n_rand])
+            (px,py)=(x_rand-x_near,y_rand-y_near)
+            theta=math.atan2(py,px)
+            (x,y)=(int(x_near+dmax*math.cos(theta)),\
+                int(y_near+dmax*math.sin(theta)))
+            self.remove_node(n_rand)
+            if abs(x-self.goal[0])<dmax and abs(y-self.goal[1])<dmax:
+                self.add_node(n_rand, self.goal[0], self.goal[1])
+                self.goal_state=n_rand
+                self.goal_flag=True
+
+            else:
+                self.add_node(n_rand,x,y)
 
     def path_to_goal(self):
-        pass
+        if self.goal_flag:
+            self.path=[]
+            self.path.append(self.goal_state)
+            new_pos = self.parent[self.goal_state]
+            while new_pos!=0:
+                self.path.append(new_pos)
+                new_pos=self.parent[new_pos]
+            self.path.append(0)
+        return self.goal_flag
 
     def get_path_coords(self):
-        pass
+        path_coords=[]
+        for node in self.path:
+            x,y=(self.x[node], self.y[node])
+            path_coords.append((x,y))
+        return path_coords
 
-    def bias(self):
-        pass
+    def bias(self, n_goal):
+        n = self.number_of_nodes()
+        self.add_node(n,n_goal[0], n_goal[1])
+        n_near=self.nearest(n)
+        self.step(n_near,n)
+        self.connect(n_near, n)
+        return self.x, self.y, self.parent
 
     def expand(self):
-        pass
+        n=self.number_of_nodes()
+        x,y=self.sample_environment()
+        self.add_node(n,x,y)
+        if self.is_free():
+            x_nearest=self.nearest(n)
+            self.step(x_nearest,n)
+            self.connect(x_nearest,n)
+        return self.x, self.y, self.parent
 
     def cost(self):
         pass
