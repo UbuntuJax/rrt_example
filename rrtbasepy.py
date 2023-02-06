@@ -112,6 +112,7 @@ class RRTGraph:
         return len(self.x)
 
     def distance(self,n1,n2):
+        #print(f'n1: {n1}')
         (x1,y1)=(self.x[n1],self.y[n1])
         (x2,y2)=(self.x[n2],self.y[n2])
         px=(float(x1)-float(x2))**2
@@ -220,5 +221,31 @@ class RRTGraph:
             self.connect(x_nearest,n)
         return self.x, self.y, self.parent
 
-    def cost(self):
-        pass
+    def nodes_within_radius(self, radius):
+        """
+        Returns all nodes within a set radius of the parent
+
+        Attributes:
+            Radius is the area within which the function will consider when declaring valid nodes
+            (relative to the parent node)
+        """
+        n=self.number_of_nodes()-1 #subtract 1 because indexing begins at 0
+        valid_nodes=[]
+        #current_node = self.parent
+
+        x=self.x[-1]
+        y=self.y[-1]
+
+        for i in range(0,n):
+            if self.distance(n,i) < radius:
+                valid_nodes.append(i)
+            else:
+                print(f'rejected node {i}')
+
+        return valid_nodes
+
+
+
+
+    def cost(self, n1, n2):
+        return self.distance(n1,n2)
