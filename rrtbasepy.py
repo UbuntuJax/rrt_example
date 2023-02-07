@@ -46,6 +46,15 @@ class RRTMap:
             obstacle=obstacles_list.pop(0)
             pygame.draw.rect(self.map, self.grey, obstacle)
 
+    def redraw(self, x_y_parent_list):
+        """
+        Wipes the map and redraws it (important when you're adding and removing nodes)
+
+        Attributes:
+            x_y_parent_list: list of the x and y positions of each node as well as the parent index
+            of the previous node
+        """
+
 class RRTGraph:
     def __init__(self, start, goal, map_dimensions, obsdim, obsnum):
         (x,y)=start
@@ -56,6 +65,7 @@ class RRTGraph:
         self.x=[]
         self.y=[]
         self.parent=[]
+        self.n=0
 
         # initialise the tree
         self.x.append(x)
@@ -97,6 +107,7 @@ class RRTGraph:
     def add_node(self,n,x,y):
         self.x.insert(n,x)
         self.y.append(y)
+        self.n += 1
 
     def remove_node(self,n):
         self.x.pop(n)
@@ -209,7 +220,7 @@ class RRTGraph:
         n_near=self.nearest(n)
         self.step(n_near,n)
         self.connect(n_near, n)
-        return self.x, self.y, self.parent
+        return self.x[n_near], self.y[n_near]
 
     def expand(self):
         n=self.number_of_nodes()
@@ -219,15 +230,20 @@ class RRTGraph:
             x_nearest=self.nearest(n)
             self.step(x_nearest,n)
             self.connect(x_nearest,n)
-        return self.x, self.y, self.parent
+        return self.x[-1], self.y[-1]
 
-    def nodes_within_radius(self, radius):
+    def find_neighbours(self, radius):
         """
         Returns all nodes within a set radius of the parent
 
         Attributes:
             Radius is the area within which the function will consider when declaring valid nodes
             (relative to the parent node)
+
+        Returns:
+            valid nodes are the neighbours surrounding the current node
+
+            best_node is the closest neighbour to the current node
         """
         n=self.number_of_nodes()-1 #subtract 1 because indexing begins at 0
         valid_nodes=[]
@@ -242,10 +258,27 @@ class RRTGraph:
             else:
                 print(f'rejected node {i}')
 
-        return valid_nodes
+        best_node = self.nearest(n)
+
+        return valid_nodes, best_node
 
 
 
 
     def cost(self, n1, n2):
+        if self.cross_obstacle(self.x[n1],self.x[n2],self.y[n1],self.y[n2]):
+            return -1
         return self.distance(n1,n2)
+
+    def pick_node(self,iteration):
+        #parent is unused
+        if iteration % 5 ==0:
+            print("bias")
+            x,y=self.bias(self.goal)
+
+        else:
+            print("expand")
+            x,y=self.expand()
+
+        node = (x,y)
+        return node

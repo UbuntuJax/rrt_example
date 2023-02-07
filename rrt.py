@@ -1,59 +1,68 @@
 import pygame
-from rrtbasepy import RRTGraph, RRTMap
+from rrtbasepy2 import RRTGraph, RRTMap
 
-def main():
-    iteration=0
-    dimensions = (600,1000)
-    start = (50,50)
-    goal = (800, 510)
-    obsdim=30
-    obsnum=50
-    valid_radius=100
+class rrt_star():
+    def __init__(self):
+        self.iteration=0
+        self.dimensions = (600,1000)
+        self.start = (50,50)
+        self.goal = (800, 510)
+        self.obsdim=30
+        self.obsnum=50
+        self.valid_radius=100
+        self.costs=[]
+        self.links=[]
 
-    pygame.init()
-    graph=RRTGraph(start,goal,dimensions,obsdim,obsnum) #Graph
-    map=RRTMap(start,goal,dimensions,obsdim,obsnum)
+        pygame.init()
+        self.graph=RRTGraph(self.start,self.goal,self.dimensions,self.obsdim,self.obsnum) #Graph
+        self.map=RRTMap(self.start,self.goal,self.dimensions,self.obsdim,self.obsnum)
 
-    obstacles=graph.make_obs()
-    map.draw_map(obstacles)
+        self.obstacles=self.graph.make_obs()
+        
+    def rrt(self):
+        self.map.draw_map(self.obstacles)
+        for i in range(0,3):
+            node=self.graph.expand()    
+        node_near=self.graph.nearest(node)
+        self.costs.insert(node[2], self.graph.distance(node, node_near))
+        node_neighbours = self.graph.find_neighbours(node, self.valid_radius)
+        print(f'node: {node}')
+        print(f'valid nodes: {node_neighbours}')
+
+        link=self.graph.chain(node, node_near)
+        self.links.append(link)
+
+        # for node_adjacent in node_neighbours:
 
 
-    # while (not graph.path_to_goal()): #for itr in range
-    #     # Xnew
-    #     if iteration % 5 ==0:
-    #         print("bias")
-    #         x,y,parent=graph.bias(goal)
+        # while (not graph.path_to_goal()): #for itr in range 
+        #     # Xnew
+        #     node = graph.pick_node(iteration)
+        #     node_near = graph.nearest(node)
+        #     print(f'node_near: {node_near}')
 
-    #     else:
-    #         print("expand")
-    #         x,y,parent=graph.expand()
+        #     # find neighbours
 
-    #     pygame.draw.circle(map.map, map.grey, (x[-1], y[-1]), map.node_rad+2,0)
-    #     pygame.draw.line(map.map,map.blue,(x[-1],y[-1]),(x[parent[-1]],y[parent[-1]]),\
-    #         map.edge_thickness)
 
-    #     if iteration%5==0:
-    #         pygame.display.update()
-    #     iteration+=1
 
-    #     # find neighbours
+
+
+
+        #     iteration += 1
+
+
+        #map.draw_path(graph.get_path_coords())
+        pygame.display.update()
+        pygame.event.clear()
+        pygame.event.wait(0)
+
+        # place 3 nodes, 1 inside the radius and 1 outside, see if function works as intended        
     
-    # map.draw_path(graph.get_path_coords())
-    # pygame.display.update()
-    # pygame.event.clear()
-    # pygame.event.wait(0)
-
-    # place 3 nodes, 1 inside the radius and 1 outside, see if function works as intended
-    graph.add_node(graph.number_of_nodes(), 50,52)
-    graph.add_node(graph.number_of_nodes(), 500,500)
-    graph.add_node(graph.number_of_nodes(), 51,50)
-    graph.add_node(graph.number_of_nodes(), 510,500)
-    print(graph.nearest(graph.number_of_nodes()-1))
-    print(f'x: {graph.x[1]}, y: {graph.y[1]}')
 
 
 if __name__ == '__main__':
-    main()
+    search=rrt_star()
+    search.rrt()
 
 # rrt* psuedocode
 """
