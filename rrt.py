@@ -1,5 +1,6 @@
 import pygame
 from rrtbasepy2 import RRTGraph, RRTMap
+import numpy as np
 
 class rrt_star():
     def __init__(self):
@@ -10,7 +11,8 @@ class rrt_star():
         self.obsdim=30
         self.obsnum=50
         self.valid_radius=100
-        self.costs=[]
+        self.costs=self.create_costs()
+        self.nodes=[]  
         self.links=[]
 
         pygame.init()
@@ -19,10 +21,12 @@ class rrt_star():
 
         self.obstacles=self.graph.make_obs()
         
-    def rrt(self):
+    def execute(self):
         self.map.draw_map(self.obstacles)
         for i in range(0,3):
-            node=self.graph.expand()    
+            node=self.graph.expand() 
+            if node is not None:
+                self.nodes.append(node)   
         node_near=self.graph.nearest(node)
         self.costs.insert(node[2], self.graph.distance(node, node_near))
         node_neighbours = self.graph.find_neighbours(node, self.valid_radius)
@@ -30,10 +34,14 @@ class rrt_star():
         print(f'valid nodes: {node_neighbours}')
 
         link=self.graph.chain(node, node_near)
-        self.links.append(link)
+        if link is not None:
+            self.links.append(link)
+
+        print(self.links)
+        print(self.nodes)
 
         # for node_adjacent in node_neighbours:
-
+        #     if self.costs
 
         # while (not graph.path_to_goal()): #for itr in range 
         #     # Xnew
@@ -42,6 +50,13 @@ class rrt_star():
         #     print(f'node_near: {node_near}')
 
         #     # find neighbours
+
+
+    def create_costs(self):
+        costs=[]
+        for i in range(0,2000):
+            costs.append(2000)
+        return costs
 
 
 
@@ -62,7 +77,7 @@ class rrt_star():
 
 if __name__ == '__main__':
     search=rrt_star()
-    search.rrt()
+    search.execute()
 
 # rrt* psuedocode
 """

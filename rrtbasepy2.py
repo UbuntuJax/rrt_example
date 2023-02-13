@@ -186,7 +186,7 @@ class RRTGraph:
 
     def chain(self, node1, node2):
         if not self.cross_obstacle(node1[0], node2[0], node1[1], node2[1]):
-            return (node1, node2)
+            return (node2[2], node1[2])
 
     def cross_obstacle(self,x1,x2,y1,y2):
         obs=self.obstacles.copy()
