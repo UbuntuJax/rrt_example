@@ -4,8 +4,8 @@ from rrtbasepy import RRTGraph, RRTMap
 def main():
     iteration=0
     dimensions = (600,1000)
-    start = (50,50)
-    goal = (800, 510)
+    start = (300,250)
+    goal = (950, 200)
     obsdim=30
     obsnum=50
 
@@ -39,7 +39,8 @@ def main():
     map.draw_path(graph.get_path_coords())
     pygame.display.update()
     pygame.event.clear()
-    pygame.event.wait(0)
+    while(1):
+        pygame.event.wait(0)
 
 
 
