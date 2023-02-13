@@ -29,7 +29,8 @@ def main():
         
     pygame.display.update()
     pygame.event.clear()
-    pygame.event.wait(0)
+    while 1:
+        pygame.event.wait(0)
 
 
 
