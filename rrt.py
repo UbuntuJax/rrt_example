@@ -31,17 +31,20 @@ class rrt_star():
         self.obstacles=self.graph.make_obs()
         
     def execute(self):
-        for _ in range(0,1000):
+        for _ in range(0,3000):
             self.map.draw_map(self.obstacles)
             node=self.graph.expand()
             self.costs[node[INDEX]]=20000 #set each node to have extreme cost so that any path will be better 
-            if node is not None:
-                self.nodes.append(node)   
-            node_near=self.graph.nearest(node)
+            if node is None:
+                continue   
+            else:
+                self.nodes.append(node)
+            node_near=self.graph.nearest(node, self.valid_radius)
+            if node_near is None:
+                continue
+
             self.costs[node[INDEX]]=self.graph.distance(node, node_near)
             node_neighbours = self.graph.find_neighbours(node, self.valid_radius)
-            # print(f'node: {node}')
-            # print(f'valid nodes: {node_neighbours}')
 
             link=self.graph.chain(node, node_near)
             if link is not None:
@@ -70,8 +73,7 @@ class rrt_star():
             pygame.draw.circle(self.map.map, self.map.grey, (node[X_VAL], node[Y_VAL]), self.map.node_rad+2,0)
             if parent is not None:
                 pygame.draw.line(self.map.map,self.map.blue,(node[X_VAL], node[Y_VAL]),\
-                    (parent[X_VAL], parent[Y_VAL]),\
-                        self.map.edge_thickness)
+                    (parent[X_VAL], parent[Y_VAL]), self.map.edge_thickness)
 
     def get_node_info(self, node_index):
         # returns xy co-ords for the node and the parent node

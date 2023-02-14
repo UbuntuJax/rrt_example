@@ -140,7 +140,7 @@ class RRTGraph:
         self.node_list.append((x,y,self.n))
         self.n+=1
 
-    def nearest(self, node):
+    def nearest(self, node, valid_radius):
         start_node=self.node_list[0]
         dmin=self.distance(start_node, node)
         node_near=start_node
@@ -149,7 +149,11 @@ class RRTGraph:
             if distance<dmin and self.node_list[i] != node:
                 dmin=distance
                 node_near=self.node_list[i]
-        return node_near
+
+        if dmin < valid_radius:
+            return node_near
+        else:
+            return None
 
     def distance(self, node1, node2):
         x1=node1[0]
