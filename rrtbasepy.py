@@ -141,6 +141,8 @@ class RRTGraph:
         self.n+=1
 
     def nearest(self, node):
+        nearest_vex
+        nearest_idx
         start_node=self.node_list[0]
         dmin=self.distance(start_node, node)
         node_near=start_node

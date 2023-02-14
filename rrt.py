@@ -30,13 +30,15 @@ class rrt_star():
     def execute(self):
         for _ in range(0,3000):
             self.map.draw_map(self.obstacles)
-            node=self.graph.expand() 
+            node=self.graph.expand() #generate random node
             if node is None:
                 continue   
             else:
                 self.nodes.append(node)
 
-            node_near=self.graph.nearest(node)
+            node_near=self.graph.nearest(node) #get closest node and return id
+
+            # generate a vertex that is limited by stepsize
 
             self.costs[node[INDEX]]=self.graph.distance(node, node_near)
             node_neighbours = self.graph.find_neighbours(node, self.valid_radius)
