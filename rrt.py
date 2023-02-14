@@ -1,5 +1,5 @@
 import pygame
-from rrtbasepy2 import RRTGraph, RRTMap
+from rrtbasepy import RRTGraph, RRTMap
 import numpy as np
 X_VAL=0
 Y_VAL=1
@@ -10,18 +10,15 @@ class rrt_star():
         self.iteration=0
         self.dimensions = (600,1000)
         self.start = (50,50)
-        self.goal = (800, 510)
+        self.goal = (510, 510)
         self.obsdim=30
         self.obsnum=50
         self.valid_radius=100
         self.costs={}
-        # self.parents={}
-        # self.nodes=[]
-        self.parents={32:59}
-        self.nodes=[(246, 21, 32), ((11, 22, 59))]  
+        self.parents={}
+        self.nodes=[]  
         self.links=[]
         self.optimal_links={}
-        print(self.optimal_links)
         self.add_start()
 
         pygame.init()
@@ -33,15 +30,13 @@ class rrt_star():
     def execute(self):
         for _ in range(0,3000):
             self.map.draw_map(self.obstacles)
-            node=self.graph.expand()
-            self.costs[node[INDEX]]=20000 #set each node to have extreme cost so that any path will be better 
+            node=self.graph.expand() 
             if node is None:
                 continue   
             else:
                 self.nodes.append(node)
-            node_near=self.graph.nearest(node, self.valid_radius)
-            if node_near is None:
-                continue
+
+            node_near=self.graph.nearest(node)
 
             self.costs[node[INDEX]]=self.graph.distance(node, node_near)
             node_neighbours = self.graph.find_neighbours(node, self.valid_radius)
@@ -61,7 +56,8 @@ class rrt_star():
 
         pygame.display.update()
         pygame.event.clear()
-        pygame.event.wait(0)    
+        while(1):
+            pygame.event.wait(0)    
     
     def add_start(self):
         self.costs[0]=0
@@ -89,23 +85,3 @@ class rrt_star():
 if __name__ == '__main__':
     search=rrt_star()
     search.execute()
-
-# rrt* psuedocode
-"""
-Rad = r
-G(V,E) //Graph containing edges and vertices
-For itr in range(0…n)
-    Xnew = RandomPosition()
-    If Obstacle(Xnew) == True, try again
-    Xnearest = Nearest(G(V,E),Xnew)
-    Cost(Xnew) = Distance(Xnew,Xnearest)
-    Xbest,Xneighbors = findNeighbors(G(V,E),Xnew,Rad)
-    Link = Chain(Xnew,Xbest)
-    For x’ in Xneighbors
-        If Cost(Xnew) + Distance(Xnew,x’) < Cost(x’)
-            Cost(x’) = Cost(Xnew)+Distance(Xnew,x’)
-            Parent(x’) = Xnew
-            G += {Xnew,x’}
-    G += Link 
-Return G
-"""

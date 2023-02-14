@@ -12,7 +12,7 @@ class RRTMap:
         self.maph,self.mapw=self.map_dimensions
 
         # window settings
-        self.map_window_name='RRT path planning'
+        self.map_window_name='RRT* path planning'
         pygame.display.set_caption(self.map_window_name)
         self.map = pygame.display.set_mode((self.mapw, self.maph))
         self.map.fill((255,255,255))
@@ -62,15 +62,8 @@ class RRTGraph:
         self.goal=goal
         self.goal_flag=False
         self.maph,self.mapw = map_dimensions
-        self.x=[]
-        self.y=[]
-        self.parent=[]
-        self.n=0
-
-        # initialise the tree
-        self.x.append(x)
-        self.y.append(y)
-        self.parent.append(0)
+        self.node_list=[(x,y,0),]
+        self.n=1
 
         # the obstacles
         self.obstacles=[]
@@ -104,56 +97,100 @@ class RRTGraph:
         self.obstacles=obs.copy()
         return obs
 
-    def add_node(self,n,x,y):
-        self.x.insert(n,x)
-        self.y.append(y)
-        self.n += 1
+    def pick_node(self,iteration):
+        #parent is unused
+        if iteration % 5 ==0:
+            print("bias")
+            x,y,n=self.bias(self.goal)
 
-    def remove_node(self,n):
-        self.x.pop(n)
-        self.y.pop(n)
+        else:
+            print("expand")
+            x,y,n=self.expand()
 
-    def add_edge(self,parent,child):
-        self.parent.insert(child,parent)
+        node = (x,y,n)
+        return node
 
-    def remove_edge(self,n):
-        self.parent.pop(n)
 
-    def number_of_nodes(self):
-        return len(self.x)
+    def bias(self):
+        pass
 
-    def distance(self,n1,n2):
-        #print(f'n1: {n1}')
-        (x1,y1)=(self.x[n1],self.y[n1])
-        (x2,y2)=(self.x[n2],self.y[n2])
-        px=(float(x1)-float(x2))**2
-        py=(float(y1)-float(y2))**2
-        return (px+py)**(0.5)
+    def expand(self):
+        x,y=self.sample_environment()
+        while(not self.is_free(x,y)):
+            x,y=self.sample_environment()
+        self.add_node(x,y)
+        return self.node_list[-1]
 
     def sample_environment(self):
         x=int(random.uniform(0,self.mapw))
         y=int(random.uniform(0,self.maph))
         return x,y
 
-    def nearest(self, n):
-        dmin=self.distance(0,n)
-        n_near=0
-        for i in range(0,n):
-            if self.distance(i,n)<dmin:
-                dmin=self.distance(i,n)
-                n_near=i
-        return n_near
-
-    def is_free(self):
-        n=self.number_of_nodes()-1
-        (x,y)=(self.x[n],self.y[n])
+    def is_free(self,x,y):
+        #checks if a node is inside an obstacle
         obs=self.obstacles.copy()
         while len(obs)>0:
             rectangle=obs.pop(0)
             if rectangle.collidepoint(x,y):
-                self.remove_node(n)
                 return False
             return True
+
+    def add_node(self,x,y):
+        #adds a node and increments the node index value
+        self.node_list.append((x,y,self.n))
+        self.n+=1
+
+    def nearest(self, node):
+        start_node=self.node_list[0]
+        dmin=self.distance(start_node, node)
+        node_near=start_node
+        for i in range(1,self.number_of_nodes()):
+            distance=self.distance(self.node_list[i], node)
+            if distance<dmin and self.node_list[i] != node:
+                dmin=distance
+                node_near=self.node_list[i]
+
+        return node_near
+
+    def distance(self, node1, node2):
+        x1=node1[0]
+        x2=node2[0]
+        y1=node1[1]
+        y2=node2[1]
+        px=(float(x1)-float(x2))**2
+        py=(float(y1)-float(y2))**2
+        return (px+py)**(0.5)
+
+    def number_of_nodes(self):
+        return len(self.node_list)
+
+    def find_neighbours(self, node, valid_radius=100):
+        """
+        Returns all nodes within a set radius of the parent
+
+        Attributes:
+            Radius is the area within which the function will consider when declaring valid nodes
+            (relative to the parent node)
+
+        Returns:
+            valid nodes are the neighbours surrounding the current node
+        """
+        valid_nodes=[]
+
+        for i in range(0,self.number_of_nodes()):
+            if self.distance(node, self.node_list[i]) < valid_radius and self.node_list[i] != node:
+                valid_nodes.append(self.node_list[i])
+            else:
+                #print(f'rejected node {self.node_list[i]} or rejected self')
+                pass
+
+        return valid_nodes
+
+    def chain(self, node1, node2):
+        if not self.cross_obstacle(node1[0], node2[0], node1[1], node2[1]):
+            return (node2[2], node1[2])
+        else:
+            return None
 
     def cross_obstacle(self,x1,x2,y1,y2):
         obs=self.obstacles.copy()
@@ -166,117 +203,3 @@ class RRTGraph:
                 if rectangle.collidepoint(x,y):
                     return True
         return False
-
-    def connect(self,n1,n2):
-        (x1,y1)=(self.x[n1],self.y[n1])
-        (x2,y2)=(self.x[n2],self.y[n2])
-        if self.cross_obstacle(x1,x2,y1,y2):
-            self.remove_node(n2)
-            return False
-        else:
-            self.add_edge(n1,n2)
-            return True
-
-    def step(self, n_near, n_rand, dmax=35):
-        d=self.distance(n_near, n_rand)
-        if d>dmax:
-            u=dmax/d
-            (x_near,y_near)=(self.x[n_near],self.y[n_near])
-            (x_rand,y_rand)=(self.x[n_rand], self.y[n_rand])
-            (px,py)=(x_rand-x_near,y_rand-y_near)
-            theta=math.atan2(py,px)
-            (x,y)=(int(x_near+dmax*math.cos(theta)),\
-                int(y_near+dmax*math.sin(theta)))
-            self.remove_node(n_rand)
-            if abs(x-self.goal[0])<dmax and abs(y-self.goal[1])<dmax:
-                self.add_node(n_rand, self.goal[0], self.goal[1])
-                self.goal_state=n_rand
-                self.goal_flag=True
-
-            else:
-                self.add_node(n_rand,x,y)
-
-    def path_to_goal(self):
-        if self.goal_flag:
-            self.path=[]
-            self.path.append(self.goal_state)
-            new_pos = self.parent[self.goal_state]
-            while new_pos!=0:
-                self.path.append(new_pos)
-                new_pos=self.parent[new_pos]
-            self.path.append(0)
-        return self.goal_flag
-
-    def get_path_coords(self):
-        path_coords=[]
-        for node in self.path:
-            x,y=(self.x[node], self.y[node])
-            path_coords.append((x,y))
-        return path_coords
-
-    def bias(self, n_goal):
-        n = self.number_of_nodes()
-        self.add_node(n,n_goal[0], n_goal[1])
-        n_near=self.nearest(n)
-        self.step(n_near,n)
-        self.connect(n_near, n)
-        return self.x[n_near], self.y[n_near]
-
-    def expand(self):
-        n=self.number_of_nodes()
-        x,y=self.sample_environment()
-        self.add_node(n,x,y)
-        if self.is_free():
-            x_nearest=self.nearest(n)
-            self.step(x_nearest,n)
-            self.connect(x_nearest,n)
-        return self.x[-1], self.y[-1]
-
-    def find_neighbours(self, radius):
-        """
-        Returns all nodes within a set radius of the parent
-
-        Attributes:
-            Radius is the area within which the function will consider when declaring valid nodes
-            (relative to the parent node)
-
-        Returns:
-            valid nodes are the neighbours surrounding the current node
-        """
-        n=self.number_of_nodes()-1 #subtract 1 because indexing begins at 0
-        valid_nodes=[]
-        #current_node = self.parent
-
-        x=self.x[-1]
-        y=self.y[-1]
-
-        for i in range(0,n):
-            if self.distance(n,i) < radius:
-                valid_nodes.append(i)
-            else:
-                print(f'rejected node {i}')
-
-        best_node = self.nearest(n)
-
-        return valid_nodes, best_node
-
-
-
-
-    def cost(self, n1, n2):
-        if self.cross_obstacle(self.x[n1],self.x[n2],self.y[n1],self.y[n2]):
-            return -1
-        return self.distance(n1,n2)
-
-    def pick_node(self,iteration):
-        #parent is unused
-        if iteration % 5 ==0:
-            print("bias")
-            x,y=self.bias(self.goal)
-
-        else:
-            print("expand")
-            x,y=self.expand()
-
-        node = (x,y)
-        return node
