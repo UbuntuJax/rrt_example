@@ -1,6 +1,9 @@
 import pygame
 from rrtbasepy2 import RRTGraph, RRTMap
 import numpy as np
+X_VAL=0
+Y_VAL=1
+INDEX=2
 
 class rrt_star():
     def __init__(self):
@@ -11,9 +14,15 @@ class rrt_star():
         self.obsdim=30
         self.obsnum=50
         self.valid_radius=100
-        self.costs=self.create_costs()
-        self.nodes=[]  
+        self.costs={}
+        # self.parents={}
+        # self.nodes=[]
+        self.parents={32:59}
+        self.nodes=[(246, 21, 32), ((11, 22, 59))]  
         self.links=[]
+        self.optimal_links={}
+        print(self.optimal_links)
+        self.add_start()
 
         pygame.init()
         self.graph=RRTGraph(self.start,self.goal,self.dimensions,self.obsdim,self.obsnum) #Graph
@@ -22,57 +31,57 @@ class rrt_star():
         self.obstacles=self.graph.make_obs()
         
     def execute(self):
-        self.map.draw_map(self.obstacles)
-        for i in range(0,3):
-            node=self.graph.expand() 
+        for _ in range(0,1000):
+            self.map.draw_map(self.obstacles)
+            node=self.graph.expand()
+            self.costs[node[INDEX]]=20000 #set each node to have extreme cost so that any path will be better 
             if node is not None:
                 self.nodes.append(node)   
-        node_near=self.graph.nearest(node)
-        self.costs.insert(node[2], self.graph.distance(node, node_near))
-        node_neighbours = self.graph.find_neighbours(node, self.valid_radius)
-        print(f'node: {node}')
-        print(f'valid nodes: {node_neighbours}')
+            node_near=self.graph.nearest(node)
+            self.costs[node[INDEX]]=self.graph.distance(node, node_near)
+            node_neighbours = self.graph.find_neighbours(node, self.valid_radius)
+            # print(f'node: {node}')
+            # print(f'valid nodes: {node_neighbours}')
 
-        link=self.graph.chain(node, node_near)
-        if link is not None:
-            self.links.append(link)
+            link=self.graph.chain(node, node_near)
+            if link is not None:
+                self.links.append(link)
 
-        print(self.links)
-        print(self.nodes)
+            for node_adjacent in node_neighbours:
+                if self.costs[node[2]] + self.graph.distance(node, node_adjacent) < self.costs[node_adjacent[INDEX]]:
+                    self.costs[node_adjacent[INDEX]]=self.costs[node[INDEX]] + self.graph.distance(node, node_adjacent)
+                    self.parents[node_adjacent[INDEX]]=node[INDEX]
+                    self.optimal_links[node[INDEX]]=node_adjacent[INDEX]
 
-        # for node_adjacent in node_neighbours:
-        #     if self.costs
+        print(f'Optimal links: {self.optimal_links}')
+        self.draw_map()
 
-        # while (not graph.path_to_goal()): #for itr in range 
-        #     # Xnew
-        #     node = graph.pick_node(iteration)
-        #     node_near = graph.nearest(node)
-        #     print(f'node_near: {node_near}')
-
-        #     # find neighbours
-
-
-    def create_costs(self):
-        costs=[]
-        for i in range(0,2000):
-            costs.append(2000)
-        return costs
-
-
-
-
-
-
-        #     iteration += 1
-
-
-        #map.draw_path(graph.get_path_coords())
         pygame.display.update()
         pygame.event.clear()
-        pygame.event.wait(0)
-
-        # place 3 nodes, 1 inside the radius and 1 outside, see if function works as intended        
+        pygame.event.wait(0)    
     
+    def add_start(self):
+        self.costs[0]=0
+        self.nodes.append((self.start[0], self.start[1], 0))
+
+    def draw_map(self):
+        for i in self.optimal_links:
+            node, parent = self.get_node_info(i)
+            pygame.draw.circle(self.map.map, self.map.grey, (node[X_VAL], node[Y_VAL]), self.map.node_rad+2,0)
+            if parent is not None:
+                pygame.draw.line(self.map.map,self.map.blue,(node[X_VAL], node[Y_VAL]),\
+                    (parent[X_VAL], parent[Y_VAL]),\
+                        self.map.edge_thickness)
+
+    def get_node_info(self, node_index):
+        # returns xy co-ords for the node and the parent node
+        node=(self.nodes[node_index][X_VAL], self.nodes[node_index][Y_VAL])
+        try:
+            parent_index=self.parents[node_index]
+            parent=(self.nodes[parent_index][X_VAL], self.nodes[parent_index][Y_VAL])
+        except KeyError:
+            parent = None 
+        return node, parent
 
 
 if __name__ == '__main__':

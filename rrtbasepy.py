@@ -242,8 +242,6 @@ class RRTGraph:
 
         Returns:
             valid nodes are the neighbours surrounding the current node
-
-            best_node is the closest neighbour to the current node
         """
         n=self.number_of_nodes()-1 #subtract 1 because indexing begins at 0
         valid_nodes=[]

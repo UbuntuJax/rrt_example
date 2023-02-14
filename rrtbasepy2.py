@@ -180,13 +180,16 @@ class RRTGraph:
             if self.distance(node, self.node_list[i]) < valid_radius and self.node_list[i] != node:
                 valid_nodes.append(self.node_list[i])
             else:
-                print(f'rejected node {self.node_list[i]}')
+                #print(f'rejected node {self.node_list[i]} or rejected self')
+                pass
 
         return valid_nodes
 
     def chain(self, node1, node2):
         if not self.cross_obstacle(node1[0], node2[0], node1[1], node2[1]):
             return (node2[2], node1[2])
+        else:
+            return None
 
     def cross_obstacle(self,x1,x2,y1,y2):
         obs=self.obstacles.copy()
