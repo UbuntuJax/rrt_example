@@ -67,6 +67,7 @@ class RRTGraph:
         self.costs={}
         self.parents={}
         self.nodes={} 
+        self.node_neighbours={}
         self.links=[]
         self.optimal_links={}
         self.n=0
@@ -150,6 +151,7 @@ class RRTGraph:
     def add_node(self,x,y):
         #adds a node and increments the node index value
         self.nodes[self.n]=(x,y)
+        self.node_neighbours[self.n]=[]
         self.n+=1
 
     def nearest(self, node):
@@ -167,7 +169,6 @@ class RRTGraph:
             
             current_node_dist=self.distance(node, current_node)
             if current_node_dist < dist_min:
-                print(f'here2')
                 dist_min=current_node_dist
                 node_near_id=id
 

@@ -33,6 +33,7 @@ class rrt_star():
 
             new_vertex=self.graph.new_vertex(node_xy, node_near_id)
             print(f'new_vertex: {new_vertex}')
+            print(f'node_neighbours: {self.graph.node_neighbours}')
 
 
         #     # generate a vertex that is limited by stepsize
