@@ -16,7 +16,7 @@ class rrt_star():
         self.valid_radius=100
         self.costs={}
         self.parents={}
-        self.nodes=[]  
+        self.nodes={} 
         self.links=[]
         self.optimal_links={}
         self.add_start()
@@ -28,42 +28,41 @@ class rrt_star():
         self.obstacles=self.graph.make_obs()
         
     def execute(self):
-        for _ in range(0,3000):
+        for _ in range(0,3): #3000
             self.map.draw_map(self.obstacles)
             node=self.graph.expand() #generate random node
-            if node is None:
-                continue   
-            else:
-                self.nodes.append(node)
+            self.nodes[node[INDEX]] = (node[X_VAL], node[Y_VAL])
+        
+        print(f'nodes: {self.nodes}')
 
-            node_near=self.graph.nearest(node) #get closest node and return id
+        #     node_near=self.graph.nearest(node) #get closest node and return id
 
-            # generate a vertex that is limited by stepsize
+        #     # generate a vertex that is limited by stepsize
 
-            self.costs[node[INDEX]]=self.graph.distance(node, node_near)
-            node_neighbours = self.graph.find_neighbours(node, self.valid_radius)
+        #     self.costs[node[INDEX]]=self.graph.distance(node, node_near)
+        #     node_neighbours = self.graph.find_neighbours(node, self.valid_radius)
 
-            link=self.graph.chain(node, node_near)
-            if link is not None:
-                self.links.append(link)
+        #     link=self.graph.chain(node, node_near)
+        #     if link is not None:
+        #         self.links.append(link)
 
-            for node_adjacent in node_neighbours:
-                if self.costs[node[2]] + self.graph.distance(node, node_adjacent) < self.costs[node_adjacent[INDEX]]:
-                    self.costs[node_adjacent[INDEX]]=self.costs[node[INDEX]] + self.graph.distance(node, node_adjacent)
-                    self.parents[node_adjacent[INDEX]]=node[INDEX]
-                    self.optimal_links[node[INDEX]]=node_adjacent[INDEX]
+        #     for node_adjacent in node_neighbours:
+        #         if self.costs[node[2]] + self.graph.distance(node, node_adjacent) < self.costs[node_adjacent[INDEX]]:
+        #             self.costs[node_adjacent[INDEX]]=self.costs[node[INDEX]] + self.graph.distance(node, node_adjacent)
+        #             self.parents[node_adjacent[INDEX]]=node[INDEX]
+        #             self.optimal_links[node[INDEX]]=node_adjacent[INDEX]
 
-        print(f'Optimal links: {self.optimal_links}')
-        self.draw_map()
+        # print(f'Optimal links: {self.optimal_links}')
+        # self.draw_map()
 
-        pygame.display.update()
-        pygame.event.clear()
-        while(1):
-            pygame.event.wait(0)    
+        # pygame.display.update()
+        # pygame.event.clear()
+        # while(1):
+        #     pygame.event.wait(0)    
     
     def add_start(self):
         self.costs[0]=0
-        self.nodes.append((self.start[0], self.start[1], 0))
+        self.nodes[0] = (self.start[0], self.start[1])
 
     def draw_map(self):
         for i in self.optimal_links:
