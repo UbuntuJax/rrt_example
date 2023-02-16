@@ -13,13 +13,6 @@ class rrt_star():
         self.goal = (510, 510)
         self.obsdim=30
         self.obsnum=50
-        self.valid_radius=100
-        self.costs={}
-        self.parents={}
-        self.nodes={} 
-        self.links=[]
-        self.optimal_links={}
-        self.add_start()
 
         pygame.init()
         self.graph=RRTGraph(self.start,self.goal,self.dimensions,self.obsdim,self.obsnum) #Graph
@@ -31,11 +24,16 @@ class rrt_star():
         for _ in range(0,3): #3000
             self.map.draw_map(self.obstacles)
             node=self.graph.expand() #generate random node
-            self.nodes[node[INDEX]] = (node[X_VAL], node[Y_VAL])
-        
-        print(f'nodes: {self.nodes}')
+            node_xy=(node[X_VAL], node[Y_VAL])
+            print(f'node: {node}')
 
-        #     node_near=self.graph.nearest(node) #get closest node and return id
+            node_near_id=self.graph.nearest(node_xy) #get closest node and return id
+            if node_near_id is None:
+                continue
+
+            new_vertex=self.graph.new_vertex(node_xy, node_near_id)
+            print(f'new_vertex: {new_vertex}')
+
 
         #     # generate a vertex that is limited by stepsize
 
@@ -58,14 +56,10 @@ class rrt_star():
         # pygame.display.update()
         # pygame.event.clear()
         # while(1):
-        #     pygame.event.wait(0)    
-    
-    def add_start(self):
-        self.costs[0]=0
-        self.nodes[0] = (self.start[0], self.start[1])
+        #     pygame.event.wait(0)   
 
     def draw_map(self):
-        for i in self.optimal_links:
+        for i in self.graph.optimal_links:
             node, parent = self.get_node_info(i)
             pygame.draw.circle(self.map.map, self.map.grey, (node[X_VAL], node[Y_VAL]), self.map.node_rad+2,0)
             if parent is not None:
@@ -74,10 +68,10 @@ class rrt_star():
 
     def get_node_info(self, node_index):
         # returns xy co-ords for the node and the parent node
-        node=(self.nodes[node_index][X_VAL], self.nodes[node_index][Y_VAL])
+        node=(self.graph.nodes[node_index][X_VAL], self.graph.nodes[node_index][Y_VAL])
         try:
-            parent_index=self.parents[node_index]
-            parent=(self.nodes[parent_index][X_VAL], self.nodes[parent_index][Y_VAL])
+            parent_index=self.graph.parents[node_index]
+            parent=(self.graph.nodes[parent_index][X_VAL], self.graph.nodes[parent_index][Y_VAL])
         except KeyError:
             parent = None 
         return node, parent

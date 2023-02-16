@@ -3,6 +3,8 @@
 import random
 import math
 import pygame
+X_VAL=0
+Y_VAL=1
 
 class RRTMap:
     def __init__(self, start, goal, map_dimensions, obsdim, obsnum):
@@ -57,13 +59,17 @@ class RRTMap:
 
 class RRTGraph:
     def __init__(self, start, goal, map_dimensions, obsdim, obsnum):
-        (x,y)=start
         self.start=start
         self.goal=goal
         self.goal_flag=False
         self.maph,self.mapw = map_dimensions
-        self.node_list=[(x,y,0),]
-        self.n=1
+        self.valid_radius=100 #also doubles as step_size
+        self.costs={}
+        self.parents={}
+        self.nodes={} 
+        self.links=[]
+        self.optimal_links={}
+        self.n=0
 
         # the obstacles
         self.obstacles=[]
@@ -73,6 +79,12 @@ class RRTGraph:
         # path
         self.goal_state=None
         self.path=[]
+
+        self.add_start()
+
+    def add_start(self):
+        self.costs[self.n] = 0
+        self.add_node(self.start[X_VAL], self.start[Y_VAL])
 
     def make_random_rect(self):
         upper_corner_x=int(random.uniform(0,self.mapw-self.obs_dim))
@@ -119,7 +131,7 @@ class RRTGraph:
         while(not self.is_free(x,y)):
             x,y=self.sample_environment()
         self.add_node(x,y)
-        return self.node_list[-1]
+        return (self.nodes[self.n-1][X_VAL],self.nodes[self.n-1][Y_VAL], self.n-1)
 
     def sample_environment(self):
         x=int(random.uniform(0,self.mapw))
@@ -137,27 +149,36 @@ class RRTGraph:
 
     def add_node(self,x,y):
         #adds a node and increments the node index value
-        self.node_list.append((x,y,self.n))
+        self.nodes[self.n]=(x,y)
         self.n+=1
 
     def nearest(self, node):
-        node_near=None
-        start_node=self.node_list[0]
-        dmin=self.distance(start_node, node)
-        node_near=start_node
-        for i in range(1,self.number_of_nodes()):
-            distance=self.distance(self.node_list[i], node)
-            if distance<dmin and self.node_list[i] != node:
-                dmin=distance
-                node_near=self.node_list[i]
+        node_near_id=None
+        dist_min=float("inf")
 
-        return node_near
+        for id in self.nodes:
+            current_node=self.nodes[id]
+            print(f'current_node: {current_node}\nnode: {node}\nnodes_dict: {self.nodes}')
+            if current_node==node:
+                continue
+
+            if self.cross_obstacle(current_node[X_VAL], node[X_VAL], current_node[Y_VAL], node[Y_VAL]):
+                continue
+            
+            current_node_dist=self.distance(node, current_node)
+            if current_node_dist < dist_min:
+                print(f'here2')
+                dist_min=current_node_dist
+                node_near_id=id
+
+        return node_near_id
 
     def distance(self, node1, node2):
-        x1=node1[0]
-        x2=node2[0]
-        y1=node1[1]
-        y2=node2[1]
+        print(f'node1: {node1}\nnode2: {node2}')
+        x1=node1[X_VAL]
+        x2=node2[X_VAL]
+        y1=node1[Y_VAL]
+        y2=node2[Y_VAL]
         px=(float(x1)-float(x2))**2
         py=(float(y1)-float(y2))**2
         return (px+py)**(0.5)
@@ -204,3 +225,22 @@ class RRTGraph:
                 if rectangle.collidepoint(x,y):
                     return True
         return False
+
+    def new_vertex(self, node_xy, node_near_id):
+        # collision should have already been checked for by this point
+        node_near=self.nodes[node_near_id]
+        distance=self.distance(node_xy, node_near)
+        if distance > self.valid_radius:
+            print(f'distance: {distance}')
+            x_diff=(node_near[X_VAL]-node_xy[X_VAL])/distance*self.valid_radius
+            y_diff=(node_near[Y_VAL]-node_xy[Y_VAL])/distance*self.valid_radius
+            print(f'x_diff; {x_diff}\ny_diff: {y_diff}')
+            new_x = node_xy[X_VAL] + x_diff
+            new_y = node_xy[Y_VAL] + y_diff
+
+            self.add_node(new_x, new_y)
+            return (new_x, new_y)
+
+
+        else:
+            return node_near
